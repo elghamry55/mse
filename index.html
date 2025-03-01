@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مواقيت الصلاة</title>
+    <link rel=" icon" type="png" href="android-chrome-192x192.png">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #eef2f3;
+            text-align: center;
+            direction: rtl;
+        }
+        .dark-mode {
+            background-color: #121212;
+            color: white;
+        }
+        .header {
+            background: linear-gradient(to right, #0056b3, #007bff);
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .dark-mode .container {
+            background: #333;
+        }
+        .prayer-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .prayer-table th, .prayer-table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        .prayer-table th {
+            background: #007bff;
+            color: white;
+        }
+        .dark-mode .prayer-table th {
+            background: #0056b3;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            transition: 0.3s;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .dark-mode .button {
+            background: #444;
+        }
+        .splash-screen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        .info-bar {
+    background: linear-gradient(90deg, #0056b3, #007bff);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    font-size: 18px;
+    font-weight: bold;
+    margin: 20px auto;
+    width: 80%;
+}
+.info-bar p {
+    margin: 5px 0;
+}
+
+    </style>
+</head>
+<body>
+    
+    <div class="splash-screen" id="splash">
+        <img src="WhatsApp Image 2025-03-01 at 05.02.54_fe978c31.jpg" alt="المتوفي" width="350" >
+        <p>الحج / محمد حامد </p>
+        <p>اللَّهُمَّ، اغْفِرْ له وَارْحَمْهُ، وَاعْفُ عنْه وَعَافِهِ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاغْسِلْهُ بمَاءٍ وَثَلْجٍ وَبَرَدٍ، وَنَقِّهِ مِنَ الخَطَايَا كما يُنَقَّى الثَّوْبُ الأبْيَضُ مِنَ الدَّنَسِ، وَأَبْدِلْهُ دَارًا خَيْرًا مِن دَارِهِ، وَأَهْلًا خَيْرًا مِن أَهْلِهِ، وَزَوْجًا خَيْرًا مِن زَوْجِهِ، وَقِهِ فِتْنَةَ القَبْرِ وَعَذَابَ النَّارِ</p>
+    </div>
+    <div id="main-content" style="display: none;">
+        <div class="header">مواقيت الصلاة</div>
+        <div class="container">
+            <table class="prayer-table">
+                <thead>
+                    <tr>
+                        <th>الصلاة</th>
+                        <th>الوقت</th>
+                    </tr>
+                </thead>
+                <tbody id="prayer-times"></tbody>
+            </table>
+        </div>
+        <div class="info-bar">
+            <p><strong></strong> <span id="current-location">جاري التحديد...</span></p>
+            <p><strong></strong> <span id="current-time">--:--:--</span></p>
+            <p><strong></strong> <span id="next-prayer">--</span></p>
+
+        </div>
+        
+        
+        <div class="container">
+            <h3>أذكار الصباح</h3>
+            <p id="azkar-morning">اللهم بك أصبحنا وبك أمسينا</p>
+            <button class="button" onclick="nextAzkar('morning')">التالي</button>
+        </div>
+        <div class="container">
+            <h3>أذكار المساء</h3>
+            <p id="azkar-evening">اللهم بك أمسينا وبك أصبحنا</p>
+            <button class="button" onclick="nextAzkar('evening')">التالي</button>
+        </div>
+        <div class="container">
+            <button class="button" onclick="toggleDarkMode()">تغيير الوضع</button>
+        </div>
+        <div class="container">
+            <h3>اختيار الموقع</h3>
+            <button class="button" onclick="getLocation()">تحديد موقعي تلقائيًا</button>
+            <select id="city-list" onchange="fetchPrayerTimesManually()">
+                <option value="">اختر المحافظة يدويًا</option>
+                <option value="cairo">القاهرة</option>
+                <option value="giza">الجيزة</option>
+                <option value="alexandria">الإسكندرية</option>
+                <option value="aswan">أسوان</option>
+                <option value="asyut">أسيوط</option>
+                <option value="beheira">البحيرة</option>
+                <option value="beni_suef">بني سويف</option>
+                <option value="dakahlia">الدقهلية</option>
+                <option value="damietta">دمياط</option>
+                <option value="fayoum">الفيوم</option>
+                <option value="gharbia">الغربية</option>
+                <option value="ismailia">الإسماعيلية</option>
+                <option value="luxor">الأقصر</option>
+                <option value="minya">المنيا</option>
+                <option value="monufia">المنوفية</option>
+                <option value="port_said">بورسعيد</option>
+                <option value="qena">قنا</option>
+                <option value="sharqia">الشرقية</option>
+                <option value="sohag">سوهاج</option>
+                <option value="suez">السويس</option>
+            </select>
+        </div>
+    </div>
+    <script>
+        setTimeout(() => {
+            document.getElementById("splash").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+        }, 10000);
+
+        function updateClock() {
+    let now = new Date();
+    let timeString = now.toLocaleTimeString("ar-EG", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById("current-time").innerText = `الساعة الآن: ${timeString}`;
+}
+
+// تحديث الساعة كل ثانية
+setInterval(updateClock, 1000);
+updateClock(); // تشغيلها عند التحميل
+
+const azkar = {
+    morning: [
+        "اللهم بك أصبحنا وبك أمسينا",
+        "أعوذ بكلمات الله التامات من شر ما خلق",
+        "اللهم إني أسألك العفو والعافية في الدنيا والآخرة",
+        "أصبحنا على فطرة الإسلام، وكلمة الإخلاص، ودين نبينا محمد صلى الله عليه وسلم",
+        "اللهم ما أصبح بي من نعمة أو بأحد من خلقك فمنك وحدك لا شريك لك",
+        "حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم",
+        "أصبحنا وأصبح الملك لله رب العالمين",
+        "أصبحنا وأصبح الملك لله رب العالمين",
+        "✅ ربنا يتقبل منك صالح الأعمال"
+    ],
+    evening: [
+        "اللهم بك أمسينا وبك أصبحنا",
+        "أعوذ بكلمات الله التامات من شر ما خلق",
+        "اللهم إني أسألك العفو والعافية في الدنيا والآخرة",
+        "أمسينا على فطرة الإسلام، وكلمة الإخلاص، ودين نبينا محمد صلى الله عليه وسلم",
+        "اللهم ما أمسى بي من نعمة أو بأحد من خلقك فمنك وحدك لا شريك لك",
+        "حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم",
+        "أمسينا وأمسى الملك لله رب العالمين",
+        "اللهم إني أسالك علماً نافعاً، ورزقاً طيباً، وعملاً متقبلا",
+        "✅ ربنا يتقبل منك صالح الأعمال"
+
+    ]
+};
+
+let currentIndex = { morning: 0, evening: 0 };
+
+function nextAzkar(type) {
+    let azkarText = document.getElementById(`azkar-${type}`);
+
+    if (currentIndex[type] < azkar[type].length - 1) {
+        currentIndex[type]++;
+    } else {
+        currentIndex[type] = 0; // يعيد من الأول بعد الرسالة
+    }
+
+    azkarText.textContent = azkar[type][currentIndex[type]];
+}
+
+
+
+function fetchPrayerTimesForCity(city) {
+    console.log(`Fetching prayer times for city: ${city}`);
+    
+    fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=EG&method=5`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.data) {
+                let timings = data.data.timings;
+                document.getElementById("prayer-times").innerHTML = `
+                    <tr><td>الفجر</td><td>${timings.Fajr}</td></tr>
+                    <tr><td>الظهر</td><td>${timings.Dhuhr}</td></tr>
+                    <tr><td>العصر</td><td>${timings.Asr}</td></tr>
+                    <tr><td>المغرب</td><td>${timings.Maghrib}</td></tr>
+                    <tr><td>العشاء</td><td>${timings.Isha}</td></tr>
+                `;
+
+                // تحديث اسم المدينة المختارة
+                document.getElementById("selected-city").innerText = `الموقع الحالي: ${city}`;
+            }
+        })
+        .catch(error => console.error("Error fetching prayer times:", error));
+}
+document.addEventListener("DOMContentLoaded", function () {
+    const locationElement = document.getElementById("current-location");
+    const timeElement = document.getElementById("current-time");
+    const nextPrayerElement = document.getElementById("next-prayer"); // عنصر لعرض الوقت المتبقي
+
+    if (!locationElement || !timeElement || !nextPrayerElement) {
+        console.error("العناصر غير موجودة في HTML");
+        return;
+    }
+    
+
+    function updateTime() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? "م" : "ص";
+        timeElement.textContent = `الساعة الآن: ${hours}:${minutes}:${seconds} ${ampm}`;
+    }
+
+    function getNextPrayer(prayerTimes) {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes(); // الوقت الحالي بالدقائق
+        let nextPrayer = null;
+        let nextPrayerTime = null;
+
+        for (const [prayer, time] of Object.entries(prayerTimes)) {
+            const [h, m] = time.split(":").map(Number);
+            const prayerMinutes = h * 60 + m;
+            if (prayerMinutes > currentTime) {
+                nextPrayer = prayer;
+                nextPrayerTime = prayerMinutes;
+                break;
+            }
+        }
+
+        if (!nextPrayer) {
+            nextPrayer = "الفجر"; // لو عدت كل الصلوات، يبقى الفجر هو القادم
+            nextPrayerTime = prayerTimes["الفجر"];
+        }
+
+        const remainingMinutes = nextPrayerTime - currentTime;
+        const remainingHours = Math.floor(remainingMinutes / 60);
+        const remainingMins = remainingMinutes % 60;
+
+        nextPrayerElement.textContent = `الصلاة القادمة: ${nextPrayer} بعد ${remainingHours} ساعة و ${remainingMins} دقيقة`;
+    }
+
+    async function fetchPrayerTimes(lat, lon) {
+        try {
+            const response = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`);
+            const data = await response.json();
+            const timings = data.data.timings;
+
+            const prayerTimes = {
+                "الفجر": timings.Fajr,
+                "الظهر": timings.Dhuhr,
+                "العصر": timings.Asr,
+                "المغرب": timings.Maghrib,
+                "العشاء": timings.Isha
+            };
+
+            getNextPrayer(prayerTimes);
+        } catch (error) {
+            console.error("خطأ في جلب أوقات الصلاة:", error);
+        }
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async function (position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+                const city = data.address.city || data.address.town || data.address.state || "غير معروف";
+
+                locationElement.textContent = `الموقع الحالي: ${city}`;
+                fetchPrayerTimes(lat, lon);
+            } catch (error) {
+                console.error("خطأ في جلب المدينة:", error);
+                locationElement.textContent = "خطأ في تحديد الموقع";
+            }
+        });
+    } else {
+        locationElement.textContent = "الموقع غير مدعوم";
+    }
+
+    setInterval(updateTime, 1000);
+    updateTime();
+});
+
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    fetchPrayerTimes(position.coords.latitude, position.coords.longitude);
+                }, () => {
+                    alert("يرجى تفعيل الموقع للحصول على المواقيت بدقة.");
+                });
+            } else {
+                alert("المتصفح لا يدعم تحديد الموقع.");
+            }
+        }
+
+        function fetchPrayerTimesManually() {
+    let city = document.getElementById("city-list").value;
+    if (city) {
+        console.log(`Fetching prayer times for city: ${city}`);
+        // يمكنك هنا إضافة كود لجلب المواقيت بناءً على المدينة
+    }
+}
+
+async function fetchPrayerTimes(latitude, longitude) {
+    console.log(`Fetching prayer times for lat: ${latitude}, lon: ${longitude}`);
+    
+    const url = `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=5`;
+    
+    try {
+        let response = await fetch(url);
+        let data = await response.json();
+        displayPrayerTimes(data.data.timings);
+    } catch (error) {
+        console.error("Error fetching prayer times:", error);
+    }
+}
+function displayPrayerTimes(timings) {
+    let tableBody = document.getElementById("prayer-times");
+    tableBody.innerHTML = "";  // تفريغ الجدول
+    
+    const prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+    const arabicNames = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
+
+    prayers.forEach((prayer, index) => {
+        let row = `<tr><td>${arabicNames[index]}</td><td>${timings[prayer]}</td></tr>`;
+        tableBody.innerHTML += row;
+    });
+}
+    </script>
+</body>
+</html>
